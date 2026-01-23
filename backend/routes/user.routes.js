@@ -1,0 +1,9 @@
+const express = require('express')
+const { getCurrentUser } = require('../controllers/user.controller')
+const auth = require('../middlewares/auth')
+
+const userRouter = express.Router()
+
+userRouter.get('/current', auth, getCurrentUser)
+
+module.exports = userRouter
