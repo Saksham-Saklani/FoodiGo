@@ -5,6 +5,7 @@ const orderItemSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Item'
     },
+    Name: String,
     price: Number,
     quantity: Number
 },{timestamps:true})

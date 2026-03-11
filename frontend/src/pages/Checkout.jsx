@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useSelector, useDispatch } from 'react-redux'
 import { setLocation, setFullAddress } from '../redux/mapSlice'
 import { ClipLoader } from 'react-spinners'
-import { CircleArrowLeftIcon, MapPin, LocateFixed, Search, TrendingUpDown } from 'lucide-react'
+import { CircleArrowLeftIcon, MapPin, LocateFixed, Search, Motorbike, Smartphone, CreditCard } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -20,9 +20,13 @@ function RecenterMap({location}){
 
 function Checkout() {
     const { location, fullAddress } = useSelector((state) => state.map)
+    const { cartItems, totalAmount } = useSelector((state) => state.user)
     const dispatch = useDispatch()
     const apiKey = import.meta.env.VITE_GEO_API_KEY
     const [ addressInput , setAddressInput ] = useState("")
+    const [ paymentMethod, setPaymentMethod ] = useState("COD")
+    const deliveryFee = totalAmount > 500 ? 0 : 40
+    const paymentAmount = totalAmount+deliveryFee
 
 
     async function getAddressByLatLng(lat, lng){
@@ -107,6 +111,70 @@ function Checkout() {
                     </div>
                 </div>
             </section>
+
+            <section>
+                <h2 className='font-semibold text-lg mb-2 flex items-center gap-2 text-gray-800'>Payment Method</h2>
+                <div className='grid grid-col-1 sm:grid-cols-2 gap-4'>
+                    <div className={`flex items-center gap-3 rounded-xl p-4 border cursor-pointer text-left transition ${paymentMethod === 'COD' ? 'border-[#83e34e] bg-green-50 shadow': 'border-gray-200 hover:border-gray-300 '}`}
+                    onClick={() => setPaymentMethod('COD')}
+                    >
+                        <span className='bg-orange-100 inline-flex items-center justify-center rounded-full h-10 w-10'>
+                            <Motorbike className='text-orange-600 text-xl' />
+                            </span>
+                        <div>
+
+                            <p className='font-medium text-gray-800'>Cash On Delivery</p>
+                            <p className='text-sm text-gray-500'>Pay when you receive your order</p>
+                        </div>
+
+                    </div>
+                    <div className={`flex items-center gap-3 rounded-xl p-4 border cursor-pointer text-left transition ${paymentMethod === 'Online' ? 'border-[#83e34e] bg-green-50 shadow': 'border-gray-200 hover:border-gray-300 '}`}
+                    onClick={() => setPaymentMethod('Online')}>
+                        <span className='inline-flex items-center justify-center rounded-full h-10 w-10 bg-purple-100'>
+                            <Smartphone className='text-purple-600 text-lg' />
+                        </span>
+                        <span className='inline-flex items-center justify-center rounded-full h-10 w-10 bg-blue-100'>
+                            <CreditCard className='text-blue-600 text-lg' />
+                        </span>
+                        <div>
+                            <p className='font-medium text-gray-800'>UPI / Debit / Credit Card</p>
+                            <p className='text-sm text-gray-500'>Pay securely Online</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 className='font-semibold text-lg mb-3 text-gray-800'>Order Summary</h2>
+                <div className='rounded-xl border bg-gray-50 p-4 space-y-2'>
+                    {cartItems.map((item, index) => (
+                        <div key={index} className='flex justify-between text-sm text-gray-700'>
+                            <span>{item.name} x {item.quantity}</span>
+                            <span>₹{item.price * item.quantity}</span>
+                        </div>
+
+                    ))}
+                    <hr className='my-2 border-gray-200' />
+                    <div className='flex justify-between font-medium text-gray-700'>
+                        <span>Subtotal</span>
+                        <span>₹{totalAmount}</span>
+                    </div>
+                    <div className='flex justify-between  text-gray-700'>
+                        <span>Delivery Fee</span>
+                        <span>{deliveryFee == 0 ? "Free" : '₹' + deliveryFee}</span>
+                    </div>
+                    <div className='font-bold text-lg flex justify-between text-[#83e34e] pt-2'>
+                        <span>Total</span>
+                        <span>₹{paymentAmount}</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <button className='w-full py-3 font-semibold cursor-pointer bg-[#83e34e] text-white hover:bg-[#66d128] rounded-xl'>
+                {paymentMethod == 'COD' ? "Place Order" : "Pay & Place Order"}
+            </button>
 
         </div>
     </div>
