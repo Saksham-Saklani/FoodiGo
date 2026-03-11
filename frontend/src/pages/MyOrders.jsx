@@ -1,0 +1,34 @@
+import React from 'react'
+import { CircleArrowLeftIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import UserOrderCard from '../components/UserOrderCard'
+import OwnerOrderCard from '../components/OwnerOrderCard'
+
+function MyOrders() {
+  const navigate = useNavigate()
+  const { myOrders, userData } = useSelector((state) => state.user)
+  return (
+    <div className='w-full min-h-screen bg-[#f7fff6] flex justify-center px-4 pt-20'>
+      <div className='w-full max-w-[700px] p-4 '>
+        <div className='flex items-center gap-4 mb-6'>
+            <button className= 'cursor-pointer' onClick={() => navigate('/')}><CircleArrowLeftIcon size={25} color={'#83e34e'}/></button>
+            <h1 className='text-2xl font-semibold text-start'>My Orders</h1>
+        </div>
+        <div className='space-y-6'>
+          {myOrders?.map((order, index) => {
+            if (userData?.user?.role === "Customer") {
+              return <UserOrderCard key={index} order={order} />
+            } else if (userData?.user?.role === "Owner") {
+              return <OwnerOrderCard key={index} order={order} />
+            }
+            return null;
+          })}
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default MyOrders 

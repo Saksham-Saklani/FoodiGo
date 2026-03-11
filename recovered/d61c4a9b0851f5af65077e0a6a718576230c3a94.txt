@@ -1,6 +1,5 @@
 const restaurantModel = require("../models/restaurant.model");
 const orderModel = require("../models/order.model");
-const userModel = require("../models/user.model");
 
 const placeOrder = async (req, res) => {
   try {
@@ -79,14 +78,14 @@ async function getMyOrders(req, res){
 
     const user = await userModel.findById(req.userId)
 
-    if(user.role == 'Customer'){
+    if(user.role == 'user'){
       const orders = await orderModel.find({user: req.userId})
       .sort({createdAt: -1})
       .populate('restaurantOrders.restaurant', 'name, image, price')
       .populate('restaurantOrders.orderItems.item', 'name')
 
       return res.status(200).json({orders})
-    } else if(user.role == 'Owner'){
+    } else if(user.role == 'owner'){
       const orders = await orderModel.find({"restaurantOrders.owner": req.userId})
     .sort({createdAt: -1})
     .populate('restaurantOrders.restaurant', 'name, image, price')
