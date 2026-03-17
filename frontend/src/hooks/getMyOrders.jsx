@@ -15,7 +15,8 @@ export const useMyOrders = () => {
                 const result = await axios.get(`${serverUrl}/api/order/my-orders`,
                     {withCredentials: true}
                 )
-                if(result) dispatch(setMyOrders(result.data))
+                if(result?.data?.orders) dispatch(setMyOrders(result.data.orders))
+                else if(result?.data?.filteredOrders) dispatch(setMyOrders(result.data.filteredOrders))
 
             } catch (error) {
                 console.log(error)

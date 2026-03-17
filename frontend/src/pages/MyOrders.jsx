@@ -8,6 +8,7 @@ import OwnerOrderCard from '../components/OwnerOrderCard'
 function MyOrders() {
   const navigate = useNavigate()
   const { myOrders, userData } = useSelector((state) => state.user)
+
   return (
     <div className='w-full min-h-screen bg-[#f7fff6] flex justify-center px-4 pt-20'>
       <div className='w-full max-w-[700px] p-4 '>
@@ -18,9 +19,9 @@ function MyOrders() {
         <div className='space-y-6'>
           {myOrders?.map((order, index) => {
             if (userData?.user?.role === "Customer") {
-              return <UserOrderCard key={index} order={order} />
+              return <UserOrderCard key={index} data={order} />
             } else if (userData?.user?.role === "Owner") {
-              return <OwnerOrderCard key={index} order={order} />
+              return <OwnerOrderCard key={index} data={order} />
             }
             return null;
           })}

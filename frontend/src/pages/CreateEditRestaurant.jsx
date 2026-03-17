@@ -5,10 +5,11 @@ import { useSelector, useDispatch } from 'react-redux'
 import axios from'axios'
 import { serverUrl} from '../App'
 import { setRestaurantData } from '../redux/ownerSlice'
+import { ClipLoader } from 'react-spinners'
 
 function CreateEditRestaurant() {
     const navigate = useNavigate()
-    const dispatch = useDispatch()
+    const dispatch = useDispatch()  
     const { currentCity, currentState, currentAddress } = useSelector(state => state.user)
     const { restaurantData } = useSelector(state => state.owner)
     const [ name, setName ] = useState(restaurantData?.restaurant?.name || "")

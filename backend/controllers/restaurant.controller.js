@@ -29,17 +29,18 @@ async function createEditRestaurant(req, res){
                 owner: req.userId
             },{new: true})
         }
-            await restaurant.populate('owner').populate(
+            await restaurant.populate([
+                { path: 'owner' },
                 {
                     path: 'items',
                     options:{
                         sort:{createdAt: -1}
                     }
                 }
-            )
+            ]);
             res.status(201).json({message:"Restaurant created/updated successfully", restaurant})
     } catch (error) {
-        res.status(500).json({message: "Error creating/updating restaurant",error})
+        res.status(500).json({message: "Error creating/updating restaurant", error: error.message || error})
     }
 }
 

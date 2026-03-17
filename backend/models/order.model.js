@@ -9,6 +9,7 @@ const orderItemSchema = mongoose.Schema(
     name: String,
     price: Number,
     quantity: Number,
+    image: String,
   },
   { timestamps: true },
 );
@@ -24,6 +25,11 @@ const restaurantOrderSchema = new mongoose.Schema(
       ref: "User",
     },
     subtotal: Number,
+    status:{
+        type: String,
+        enum: ["Pending", "Preparing", "Out for Delivery", "Delivered"],
+        default: "Pending"
+    },
     orderItems: [orderItemSchema],
   },
   { timestamps: true },

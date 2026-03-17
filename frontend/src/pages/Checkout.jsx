@@ -8,6 +8,7 @@ import { ClipLoader } from 'react-spinners'
 import { CircleArrowLeftIcon, MapPin, LocateFixed, Search, Motorbike, Smartphone, CreditCard } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import { addMyOrder } from '../redux/userSlice'
 
 function RecenterMap({location}){
     if(location.lat && location.lon){
@@ -73,6 +74,7 @@ function Checkout() {
         },{withCredentials: true})
 
         console.log(result.data)
+        dispatch(addMyOrder(result.data.newOrder))
         navigate('/order-placed')
            
        } catch (error) {

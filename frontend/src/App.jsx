@@ -15,8 +15,9 @@ import { useMyCityRestaurants } from './hooks/myCityRestaurants'
 import EditItem from './pages/EditItem'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
-import OrderPlaced from './pages/OrderPlaced'
 import MyOrders from './pages/MyOrders'
+import OrderPlaced from './pages/OrderPlaced'
+import {useMyOrders} from './hooks/getMyOrders'
 export const serverUrl = 'http://localhost:3000'
 
 
@@ -28,6 +29,8 @@ function App() {
   useCurrentCity ()
   useMyRestaurant()
   useMyCityRestaurants()
+  useMyOrders()
+
 
   const { userData } = useSelector((state) => state.user)
   
