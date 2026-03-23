@@ -19,6 +19,23 @@ async function getCurrentUser(req, res){
     }
 }
 
+async function updateUserLocation(req,res){
+    try {
+        const {lat,lon} = req.body
+        const user = await userModel.findByIdAndUpdate(req.userId, {
+            location:{
+                type: 'Point',
+                coordinates: [lon, lat]
+            }
+        },{new: true})
+
+        res.status(200).json({message: 'Location updated successfully'})
+    } catch (error) {
+        res.status(500).json({message: `Update location error: ${error}`})
+    }
+}
+
 module.exports = {
-    getCurrentUser
+    getCurrentUser,
+    updateUserLocation
 }

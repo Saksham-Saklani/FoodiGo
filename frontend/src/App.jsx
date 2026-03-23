@@ -18,7 +18,9 @@ import Checkout from './pages/Checkout'
 import MyOrders from './pages/MyOrders'
 import OrderPlaced from './pages/OrderPlaced'
 import {useMyOrders} from './hooks/getMyOrders'
+import { useUpdateLocation } from './hooks/updateLocation'
 export const serverUrl = 'http://localhost:3000'
+
 
 
 
@@ -30,6 +32,7 @@ function App() {
   useMyRestaurant()
   useMyCityRestaurants()
   useMyOrders()
+  useUpdateLocation()
 
 
   const { userData } = useSelector((state) => state.user)
@@ -42,7 +45,7 @@ function App() {
         <Route path='/login' element={!userData ? <Login /> : <Home/>} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
         <Route path='/user-dashboard' element={!userData ? <Login /> : <UserDashboard />} />
-        <Route path='/' element={!userData ? <Login /> : <OwnerDashboard />} />
+        <Route path='/' element={!userData ? <Login /> : <Home />} />
         <Route path='/create-edit-restaurant' element={<CreateEditRestaurant />} />
         <Route path='/add-item' element={<AddItem />} />
         <Route path='/edit-item/:itemId' element={<EditItem />} />

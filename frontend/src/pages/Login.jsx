@@ -36,8 +36,9 @@ function Login() {
       const result = await axios.post(`${serverUrl}/api/auth/login`,{
         email,
         password,
-      },{withCredentials: true},
-      dispatch(setUserData(result.data)))
+      },{withCredentials: true})
+      
+      dispatch(setUserData(result.data))
 
       setLoading(false)
       setError('')

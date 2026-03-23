@@ -1,6 +1,7 @@
 const restaurantModel = require("../models/restaurant.model");
 const orderModel = require("../models/order.model");
 const userModel = require("../models/user.model");
+const DeliveryAssignmentModel = require("../models/deliveryAssignment.model");
 
 const placeOrder = async (req, res) => {
   try {
@@ -120,21 +121,157 @@ async function updateOrderStatus(req, res){
         const {orderId, restaurantId} = req.params
         const { status } =  req.body
 
+        let deliveryPartnersPayload = []
+
         const order = await orderModel.findById(orderId)
         if(!order) return res.status(404).json({message: 'order not found'})
 
-        const shopOrder = order.restaurantOrders.find(r => r.restaurant == restaurantId)  
-        if(!shopOrder) return res.status(404).json({message: 'shop order not found'})
+        const restaurantOrder = order.restaurantOrders.find(r => r.restaurant == restaurantId)  
+        if(!restaurantOrder) return res.status(404).json({message: 'shop order not found'})
 
-        shopOrder.status = status
-        await shopOrder.save()
+        restaurantOrder.status = status
+        if(restaurantOrder.status == 'Out for Delivery' && !restaurantOrder.assignment){
+
+          const {longitude, latitude} = order.deliveryAddress
+            const nearByDeliveryPartners = await userModel.find({
+              role:'Delivery Partner',
+              location:{
+                $near:{
+                  $geometry:{
+                    type: 'Point',
+                    coordinates: [Number(longitude), Number(latitude)]
+                  },
+                  $maxDistance: 50000000
+                }
+              }
+            })
+
+            const nearByPartnerIds = nearByDeliveryPartners.map(p => p._id)
+
+            const busyPartnerIds = await DeliveryAssignmentModel.find({
+              deliveryPartner: {$in: nearByPartnerIds},
+              status: {$nin: ['broadcasted', 'delivered']}
+            }).distinct('deliveryPartner')
+
+          const busyPartnersSet = new Set(busyPartnerIds)
+
+          const availablePartners = nearByDeliveryPartners.filter(p => !busyPartnersSet.has(String(p._id)))
+          const candidates  = availablePartners.map(p => p._id)
+
+          if(candidates.length == 0){
+            await order.save()
+            return res.status(404).json({message: 'No delivery partners available'})  
+          }
+
+          const deliveryAssignment = await DeliveryAssignmentModel.create({
+            order: orderId,
+            restaurant: restaurantOrder.restaurant,
+            restaurantOrderId: restaurantOrder._id,
+            broadcastedTo: candidates,
+            status: 'broadcasted'
+        })
+
+        restaurantOrder.assignment = deliveryAssignment._id
+        restaurantOrder.assignedDeliveryPartner = deliveryAssignment.deliveryPartner
+
+        deliveryPartnersPayload = availablePartners.map(p => ({
+          id: p._id,
+          fullname: p.fullname,
+          longitude: p.location.coordinates[0],
+          latitude: p.location.coordinates[1],
+          mobile: p.mobile
+        }))
+        }
+        
         await order.save()
+        const updatedRestaurantOrder = order.restaurantOrders.find(o => o.restaurant == restaurantId)
 
-        res.status(200).json({message: 'order status updated successfully'})
+        await order.populate('restaurantOrders.restaurant', 'name')
+        await order.populate('restaurantOrders.assignedDeliveryPartner', 'fullname email mobile')
+
+
+
+        res.status(200).json({
+          message: 'order status updated successfully',
+          restaurantOrder: updatedRestaurantOrder,
+          assignedDeliveryPartner: updatedRestaurantOrder?.assignedDeliveryPartner,
+          availablePartners: deliveryPartnersPayload,
+          assignment: updatedRestaurantOrder?.assignment
+        })
     } catch (error) {
         res.status(500).json({message: `update order status error: ${error}`})
     }
 } 
+
+const getDeliveryPartnerAssignments = async(req, res) => {
+    try {
+      const deliveryPartner = req.userId
+    const assignments = await DeliveryAssignmentModel.find({
+      broadcastedTo: deliveryPartner,
+      status: 'broadcasted'
+    })
+    .populate('order')
+    .populate('restaurant')
+
+     const formatted = assignments.map(a => ({
+      assignmentId: a._id,
+      orderId: a?.order?._id,
+      restaurant: a?.restaurant?.name,
+      items: a?.order?.restaurantOrders?.find(ro => ro._id.equals(a.restaurantOrderId))?.orderItems || [],
+      subtotal: a?.order?.restaurantOrders?.find(ro => ro._id.equals(a.restaurantOrderId))?.subtotal,
+      deliveryAddress: a?.order?.deliveryAddress,
+     }))
+
+     res.status(200).json({assignments: formatted})
+    } catch (error) {
+      res.status(500).json({message: `get delivery partner assignments error: ${error}`})
+    }
+}
+
+const acceptDeliveryAssignment = async(req, res) => {
+  try {
+    const {assignmentId} = req.params
+    const deliveryPartnerId =req.userId
+
+    const assignment = await DeliveryAssignmentModel.findById(assignmentId)
+
+    if(!assignmentId) return res.status(404).json({message: "assignment not found"})
+
+    const alreadyAssigned = await DeliveryAssignmentModel.findOne({
+      status: {$nin: ['broadcasted', 'delivered']},
+      deliveryPartner: deliveryPartnerId
+    })
+
+    if(alreadyAssigned){
+      return res.status(400).json({message: "Another order already assigned"})
+    }
+
+    if(assignment.status !== 'broadcasted'){
+      return res.status(400).json({message: "assignment expired"})
+    }
+
+    assignment.status = 'assigned'
+    assignment.deliveryPartner = deliveryPartnerId
+    assignment.acceptedAt = new Date()
+    await assignment.save()
+
+    const order = await orderModel.findById(assignment.order)
+
+    if(!order) return res.status(404).json({message: "order not found"})
+    
+    const restaurantOrder = order.restaurantOrders.find(ro => ro._id.equals(assignment.restaurantOrderId))
+
+
+    restaurantOrder.assignedDeliveryPartner = deliveryPartnerId
+    await order.save()
+
+  res.status(200).json({message: "order accepted by delivery partner"})
+    
+
+  } catch (error) {
+    res.status(500).json({message: `accept delivery assignment error: ${error}`})
+  }
+}
 
 
 
@@ -143,5 +280,7 @@ async function updateOrderStatus(req, res){
 module.exports = {
   placeOrder,
   getMyOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  getDeliveryPartnerAssignments,
+  acceptDeliveryAssignment
 };

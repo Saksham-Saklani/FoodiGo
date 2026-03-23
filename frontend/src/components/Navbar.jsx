@@ -103,10 +103,12 @@ function Navbar() {
                 onClick={() => setShowSearch(true)}
                 />
             }
+             {userData?.user?.role === 'Customer' && 
              <div className='relative cursor-pointer' onClick={() => navigate('/cart')}>
                 <ShoppingCart size={25} color={'#83e34e'} />
                 <span className='absolute top-[-12px] right-[-9px] text-[#83e34e]'>{cartItems.length}</span>
             </div>
+             }
 
             <button className='hidden md:flex bg-[#83e343]/10 text-[#83e343]  items-center gap-2 rounded-lg text-sm  font-medium py-1 px-3 cursor-pointer' onClick={() => navigate('/my-orders')}>
             <Box size={20}/>
@@ -121,7 +123,7 @@ function Navbar() {
                  {userData?.user?.fullname.slice(0,1)}
             </div>
                 {showMenu && 
-                    <div className='fixed top-[80px] md:right-[5%] right-[10px] lg:right-[10%] shadow-2xl rounded-xl bg-white  w-auto min-w-[180px] p-[20px] flex flex-col gap-[10px] z-[9999] '>
+                    <div className={`fixed top-[80px] ${userData?.user?.role === 'Customer' ? 'md:right-[5%] right-[10px] lg:right-[10%]': 'md:right-[20%] right-[30px] lg:right-[30%]'} shadow-2xl rounded-xl bg-white  w-auto min-w-[180px] p-[20px] flex flex-col gap-[10px] z-[9999]`}>
                     <div className='font-semibold text-[17px] '>{userData?.user?.fullname}</div>
                    {userData?.user?.role === 'Customer' &&
                     <div className='text-[#83e343] md:hidden text-[17px] flex items-center gap-2 font-semibold cursor-pointer' onClick={() => navigate('/my-orders')}>

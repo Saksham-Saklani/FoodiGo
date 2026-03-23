@@ -1,10 +1,15 @@
 import React from 'react'
-import Navbar from '../components/Navbar'
 import OwnerDashboard from '../components/OwnerDashboard'
+import { useSelector } from 'react-redux'
+import DeliveryPartnerDashBoard from '../components/DeliveryPartnerDashBoard'
+import UserDashboard from '../components/UserDashboard'
 function Home() {
+  const { userData } = useSelector((state) => state.user)
   return (
     <>
-    <OwnerDashboard />
+    {userData?.user?.role === 'Customer' && <UserDashboard />}
+    {userData?.user?.role === 'Owner' && <OwnerDashboard />}
+    {userData?.user?.role === 'Delivery Partner' && <DeliveryPartnerDashBoard />}
     </>
   )
 }

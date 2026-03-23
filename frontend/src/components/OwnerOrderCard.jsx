@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { Mail, Phone } from 'lucide-react'
 import { serverUrl } from '../App'
 import axios from 'axios'
@@ -6,12 +6,14 @@ import { useDispatch } from 'react-redux'
 import { setOrderStatus } from '../redux/userSlice'
 
 function OwnerOrderCard({data}) {
+    const [availablePartners, setAvailablePartners] = useState([])
     const dispatch = useDispatch()
     const handleUpdateStatus = async(orderId, restaurantId, status) => {
         try {
             const result = await axios.post(`${serverUrl}/api/order/update-status/${orderId}/${restaurantId}`, {status}, {withCredentials: true})
             console.log(result.data)
             dispatch(setOrderStatus({restaurantId, orderId, status}))
+            setAvailablePartners(result.data.availablePartners || [])
         } catch (error) {
             console.log(error)
         }
@@ -45,8 +47,26 @@ function OwnerOrderCard({data}) {
                 <option value="Pending">Pending</option>
                 <option value="Preparing">Preparing</option>
                 <option value="Out for Delivery">Out for Delivery</option>
-            </select>
+            </select> 
         </div>
+
+        {data.restaurantOrders.status == 'Out for Delivery' && (
+            <div className='mt-3 p-2 rounded-lg bg-green-50 border'>
+                <p className='text-sm text-gray-800'>Available Delivery Partners:</p>
+                {availablePartners?.length > 0 ? (
+                    availablePartners.map((p, index) => (
+                        <div key={index} className='text-xs text-gray-500 p-2'>
+                            {p.fullname} - {p.mobile}
+                        </div>
+                    ))
+                ) : (
+                    <p className='text-sm text-gray-500'>Waiting for delivery partners</p>
+                ) }
+                        
+                   
+                
+            </div>
+        )}
 
         <div className='text-right text-sm font-bold text-gray-800 mt-2'>
             <p>Total: ₹{data.restaurantOrders.subtotal}</p>

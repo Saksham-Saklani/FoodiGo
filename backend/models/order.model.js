@@ -30,6 +30,15 @@ const restaurantOrderSchema = new mongoose.Schema(
         enum: ["Pending", "Preparing", "Out for Delivery", "Delivered"],
         default: "Pending"
     },
+    assignment:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DeliveryAssignment',
+        default:null
+    },
+    assignedDeliveryPartner:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     orderItems: [orderItemSchema],
   },
   { timestamps: true },
