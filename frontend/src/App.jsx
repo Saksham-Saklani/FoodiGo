@@ -19,6 +19,7 @@ import MyOrders from './pages/MyOrders'
 import OrderPlaced from './pages/OrderPlaced'
 import {useMyOrders} from './hooks/getMyOrders'
 import { useUpdateLocation } from './hooks/updateLocation'
+import TrackOrder from './pages/TrackOrder'
 export const serverUrl = 'http://localhost:3000'
 
 
@@ -53,6 +54,7 @@ function App() {
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/order-placed' element={<OrderPlaced />} />
         <Route path='/my-orders' element={<MyOrders />} />
+        <Route path='/track-order/:orderId' element={<TrackOrder/>}/>
       </Routes>
     </>
   )

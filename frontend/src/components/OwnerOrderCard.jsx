@@ -52,14 +52,16 @@ function OwnerOrderCard({data}) {
 
         {data.restaurantOrders.status == 'Out for Delivery' && (
             <div className='mt-3 p-2 rounded-lg bg-green-50 border'>
-                <p className='text-sm text-gray-800'>Available Delivery Partners:</p>
+                <p className='text-sm text-gray-800'>{data.restaurantOrders?.assignedDeliveryPartner ? "Assigned Delivery Partner: " : "Available Delivery Partners: "}</p>
                 {availablePartners?.length > 0 ? (
                     availablePartners.map((p, index) => (
                         <div key={index} className='text-xs text-gray-500 p-2'>
                             {p.fullname} - {p.mobile}
                         </div>
                     ))
-                ) : (
+                ) : data.restaurantOrders?.assignedDeliveryPartner ? (
+                    <p className='text-sm text-gray-500'>{data.restaurantOrders.assignedDeliveryPartner.fullname} - {data.restaurantOrders.assignedDeliveryPartner.mobile}</p>
+                ): (
                     <p className='text-sm text-gray-500'>Waiting for delivery partners</p>
                 ) }
                         

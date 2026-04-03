@@ -2,6 +2,7 @@ const restaurantModel = require("../models/restaurant.model");
 const orderModel = require("../models/order.model");
 const userModel = require("../models/user.model");
 const DeliveryAssignmentModel = require("../models/deliveryAssignment.model");
+const { sendDeliveryOtpMail } = require('../utils/mail')
 
 const placeOrder = async (req, res) => {
   try {
@@ -98,6 +99,7 @@ async function getMyOrders(req, res){
     .populate('restaurantOrders.restaurant', 'name image price')
     .populate('restaurantOrders.orderItems.item', 'name image')
     .populate('user')
+    .populate('restaurantOrders.assignedDeliveryPartner', 'fullname email mobile')
 
     const filteredOrders = orders.map((order) => ({
         _id: order._id,
@@ -273,7 +275,137 @@ const acceptDeliveryAssignment = async(req, res) => {
   }
 }
 
+const getCurrentOrder = async(req, res) => {
+  try {
+    const assignment = await DeliveryAssignmentModel.findOne({
+    deliveryPartner: req.userId,
+    status: "assigned"
+  })
+  .populate('restaurant', 'name')
+  .populate('deliveryPartner', 'fullname email mobile location')
+  .populate({
+    path: 'order',
+    populate:[{path: 'user', select: 'fullname email mobile location'}]
+  })
 
+
+  if(!assignment) return res.status(404).json({message: "no order found"})
+
+  const restaurantOrder = assignment.order.restaurantOrders.find(ro => ro._id.equals(assignment.restaurantOrderId))
+
+  if(!restaurantOrder) return res.status(404).json({message: "restaurant order not found"})
+
+  let customerLocation =  {lat: null, lon: null}
+  let deliveryPartnerLocation =  {lat: null, lon: null}
+
+  customerLocation.lat = assignment.order.deliveryAddress.latitude
+  customerLocation.lon = assignment.order.deliveryAddress.longitude
+
+  deliveryPartnerLocation.lat = assignment.deliveryPartner.location.coordinates[1]
+  deliveryPartnerLocation.lon = assignment.deliveryPartner.location.coordinates[0]
+
+  return res.status(200).json({message: "current order",
+    _id: assignment.order._id,
+    user: assignment.order.user,
+    restaurantOrder,
+    restaurant: assignment.restaurant,
+    deliveryAddress: assignment.order.deliveryAddress,
+    customerLocation,
+    deliveryPartnerLocation
+  })
+
+  } catch (error) {
+    res.status(500).json({message: `get current order error: ${error}`})
+  }
+}
+
+const getOrderById = async(req, res) => {
+  try {
+    const {orderId} = req.params
+
+    const order = await orderModel.findById(orderId)
+    .populate("user")
+    .populate({
+      path: "restaurantOrders.restaurant",
+      model: "restaurant"
+    })
+    .populate({
+      path: "restaurantOrders.assignedDeliveryPartner",
+      model: "User"
+    })
+    .populate({
+      path: "restaurantOrders.orderItems",
+      model: "Item"
+    })
+    .lean()
+
+    if(!order) return res.status(400).json({message: "order not found"})
+
+    return res.status(200).json({message: "order found", order})
+  } catch (error) {
+    res.status(500).json({message: `get order by id error: ${error}`})
+  }
+}
+
+const sendDeliveryOtp = async(req, res) => {
+  try {
+    const {orderId, restaurantOrderId} = req.body
+
+    const order = await orderModel.findById(orderId)
+    .populate("user")
+
+    const restaurantOrder = order.restaurantOrders.id(restaurantOrderId)
+
+    if(!order || !restaurantOrder){
+      return res.status(400).json({message: "order not found"})
+    }
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString()
+    restaurantOrder.otp = otp
+    restaurantOrder.otpExpiry = Date.now() + 5*60*1000
+
+    await order.save()
+    await sendDeliveryOtpMail(order.user, otp)
+
+    return res.status(200).json({message: `otp sent successfully to ${order.user?.fullname}`})
+
+  } catch (error) {
+    res.status(500).json({message: `send delivery otp error: ${error}`})
+  }
+}
+
+const verifyDeliveryOtp = async(req, res) => {
+  try {
+    const { orderId, restaurantOrderId, otp } = req.body
+
+    const order = await orderModel.findById(orderId)
+
+    const restaurantOrder = order.restaurantOrders.id(restaurantOrderId)
+
+     if(!order || !restaurantOrder){
+      return res.status(400).json({message: "order not found"})
+    }
+
+    if(restaurantOrder.otp !== Number(otp) || restaurantOrder.otpExpiry < Date.now()){
+      return res.status(400).json({message: "OTP Invalid/Expired"})
+    }
+
+    restaurantOrder.status = "Delivered"
+    restaurantOrder.deliveredAt = Date.now()
+    await order.save()
+
+    await DeliveryAssignmentModel.deleteOne({
+      order: order._id,
+      restaurantOrderId: restaurantOrder._id,
+      deliveryPartner: restaurantOrder.assignedDeliveryPartner
+    })
+    
+    return res.status(200).json({message: "order delivered successfully"})
+
+  } catch (error) {
+    res.status(500).json({message: `verify delivery otp error: ${error}`})
+  }
+}
 
 
 
@@ -282,5 +414,9 @@ module.exports = {
   getMyOrders,
   updateOrderStatus,
   getDeliveryPartnerAssignments,
-  acceptDeliveryAssignment
+  acceptDeliveryAssignment,
+  getCurrentOrder,
+  getOrderById,
+  sendDeliveryOtp,
+  verifyDeliveryOtp
 };

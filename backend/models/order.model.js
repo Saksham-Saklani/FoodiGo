@@ -40,6 +40,18 @@ const restaurantOrderSchema = new mongoose.Schema(
         ref: 'User'
     },
     orderItems: [orderItemSchema],
+       otp:{
+        type: Number,
+        default: null
+    },
+    otpExpiry:{
+        type: Date,
+        default: null
+    },
+    deliveredAt:{
+      type: Date,
+      default: null
+    }
   },
   { timestamps: true },
 );

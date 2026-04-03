@@ -20,4 +20,13 @@ const transporter = nodemailer.createTransport({
     })
   }
 
-  module.exports = { sendOtpMail };
+   async function sendDeliveryOtpMail(user, otp){
+    await transporter.sendMail({
+        from: process.env.EMAIL,
+        to: user.email,
+        subject: 'Your Delivery OTP',
+        html: `<p>Your OTP for delivery is <b>${otp}</b>. This OTP will expire in 5 minutes.</p>`
+    })
+  }
+
+  module.exports = { sendOtpMail, sendDeliveryOtpMail };

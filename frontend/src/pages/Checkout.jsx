@@ -112,11 +112,10 @@ function Checkout() {
                     <div className='w-full h-64 flex items-center justify-center'>
                         {location && location.lat!== 0 && location.lon !== 0 ? (
                             
-                                                    <MapContainer
-                                                    
-                        className={'w-full h-full'}
-                        zoom={16}
-                        center={[location?.lat, location?.lon]}>
+                        <MapContainer
+                            className={'w-full h-full'}
+                            zoom={16}
+                            center={[location?.lat, location?.lon]}>
                             <TileLayer
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
