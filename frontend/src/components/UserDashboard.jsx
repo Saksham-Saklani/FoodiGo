@@ -1,88 +1,135 @@
-import React, { useRef } from 'react'
-import Navbar from './Navbar'
-import { categories } from '../category'
-import CategoryCard from './CategoryCard'
-import { CircleChevronLeft, CircleChevronRight } from 'lucide-react'
-import { useSelector } from 'react-redux'
-import FoodCard from './FoodCard'
-
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import Navbar from "./Navbar";
+import { categories } from "../category";
+import CategoryCard from "./CategoryCard";
+import { CircleChevronLeft, CircleChevronRight } from "lucide-react";
+import { useSelector } from "react-redux";
+import FoodCard from "./FoodCard";
+import { useNavigate } from "react-router-dom";
 
 function UserDashboard() {
-  const ctgScrollRef = useRef()
-  const restScrollRef = useRef()
-  const { myCityRestaurants } = useSelector(state => state.user)
-  const cityItems = myCityRestaurants?.restaurants?.flatMap((rest) => rest.items) || []
-  console.log("city Items:",cityItems)
+  const ctgScrollRef = useRef();
+  const restScrollRef = useRef();
+  const { myCityRestaurants, searchItems } = useSelector((state) => state.user);
+  const cityItems = useMemo(() => {
+    return myCityRestaurants?.restaurants?.flatMap((rest) => rest.items) || [];
+  }, [myCityRestaurants]);
 
+  const [categorisedList, setCategorisedList] = useState([]);
+  const navigate = useNavigate()
+
+  const handleCategoryList = (category) => {
+    if (category === "All") {
+      setCategorisedList(cityItems);
+    } else {
+      const filteredItems = cityItems?.filter((i) => i.category === category);
+      setCategorisedList(filteredItems);
+    }
+  };
 
   const handleScroll = (ref, direction) => {
-
-    if(ref.current){
+    if (ref.current) {
       ref.current.scrollBy({
-        left: direction === 'left' ? -200 : 200,
-        behavior: 'smooth'
-      })
+        left: direction === "left" ? -200 : 200,
+        behavior: "smooth",
+      });
     }
-  }
+  };
+
+  useEffect(() => {
+    setCategorisedList(cityItems);
+  }, [cityItems]);
   return (
-    <div className='bg-[#f7fff6] flex flex-col items-center min-h-screen w-screen gap-5 pt-[80px] overflow-y-auto'>
-      <Navbar/>
-      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-
-          <h1 className='text-2xl sm:text-3xl text-gray-800 '>Inspirations for your first meal</h1>
-          <div className='w-full relative'>
-              <button className='w-8 h-8 absolute left-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center'
-              onClick = {() => handleScroll(ctgScrollRef, 'left')}>
-                <CircleChevronLeft />
-              </button>
-           <div className='w-full flex overflow-x-auto gap-4 pb-2' ref={ctgScrollRef}>
-           {categories.map((ctg, index) => {
-              return <CategoryCard name={ctg.category} image={ctg.image} key={index}/>
-            })}
-           </div>
-           <button className='w-8 h-8 absolute right-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center'
-           onClick = {() => handleScroll(ctgScrollRef, 'right')}>
-           <CircleChevronRight />
-              </button>
+    <div className="bg-[#f7fff6] flex flex-col items-center min-h-screen w-screen gap-5 pt-[80px] overflow-y-auto">
+      <Navbar />
+      {searchItems && (
+        <div className="w-full max-w-6xl flex flex-col items-start gap-5 shadow-md bg-white rounded-2xl p-5 mt-4">
+          <h1 className="text-3xl sm:text-2xl text-gray-900 border-b border-gray-200 pb-2 font-semibold">Search Results</h1>
+          <div className="w-full h-auto flex flex-wrap gap-6 justify-center">
+            {searchItems.map((item) => {
+            return <FoodCard data={item} key={item._id}/>
+          })}
           </div>
 
+        </div>
+      )}
+      <div className="w-full max-w-6xl flex flex-col gap-5 items-start  p-[10px]">
+        <h1 className="text-2xl sm:text-3xl text-gray-800 ">
+          Inspirations for your first meal
+        </h1>
+        <div className="w-full relative">
+          <button
+            className="w-8 h-8 absolute left-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center"
+            onClick={() => handleScroll(ctgScrollRef, "left")}
+          >
+            <CircleChevronLeft />
+          </button>
+          <div
+            className="w-full flex overflow-x-auto gap-4 pb-2"
+            ref={ctgScrollRef}
+          >
+            {categories.map((ctg, index) => {
+              return (
+                <CategoryCard
+                  name={ctg.category}
+                  image={ctg.image}
+                  key={index}
+                  onClick={() => handleCategoryList(ctg.category)}
+                />
+              );
+            })}
+          </div>
+          <button
+            className="w-8 h-8 absolute right-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center"
+            onClick={() => handleScroll(ctgScrollRef, "right")}
+          >
+            <CircleChevronRight />
+          </button>
+        </div>
       </div>
 
-      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-
-          <h1 className='text-2xl sm:text-3xl text-gray-800 '>Top Restaurants in your city</h1>
-          <div className='w-full relative'>
-              <button className='w-8 h-8 absolute left-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center'
-              onClick = {() => handleScroll(restScrollRef, 'left')}>
-                <CircleChevronLeft />
-              </button>
-           <div className='w-full flex overflow-x-auto gap-4 pb-2' ref={restScrollRef}>
-           {myCityRestaurants?.restaurants?.map((rest, index) => {
-              return <CategoryCard name={rest.name} image={rest.image} key={index}/>
+      <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
+        <h1 className="text-2xl sm:text-3xl text-gray-800 ">
+          Top Restaurants in your city
+        </h1>
+        <div className="w-full relative">
+          <button
+            className="w-8 h-8 absolute left-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center"
+            onClick={() => handleScroll(restScrollRef, "left")}
+          >
+            <CircleChevronLeft />
+          </button>
+          <div
+            className="w-full flex overflow-x-auto gap-4 pb-2"
+            ref={restScrollRef}
+          >
+            {myCityRestaurants?.restaurants?.map((rest, index) => {
+              return (
+                <CategoryCard name={rest.name} image={rest.image} key={index} onClick={() => navigate(`/restaurant/${rest._id}`)} />
+              );
             })}
-           </div>
-           <button className='w-8 h-8 absolute right-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center'
-           onClick = {() => handleScroll(restScrollRef, 'right')}>
-           <CircleChevronRight />
-              </button>
           </div>
-          
-
+          <button
+            className="w-8 h-8 absolute right-0 top-1/2 -translate-y-1/2 bg-[#83e34e] text-white p-1 rounded-full cursor-pointer hover:bg-[#83e34e]/80 shadow-lg z-10 flex items-center justify-center"
+            onClick={() => handleScroll(restScrollRef, "right")}
+          >
+            <CircleChevronRight />
+          </button>
+        </div>
       </div>
 
-      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-
-          <h1 className='text-2xl sm:text-3xl text-gray-800 '>Suggested food items</h1>
-          <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
-            {cityItems.map((item) => {
-              return <FoodCard data={item}/>
-            })}
-
-          </div>
-
+      <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
+        <h1 className="text-2xl sm:text-3xl text-gray-800 ">
+          Suggested food items
+        </h1>
+        <div className="w-full h-auto flex flex-wrap gap-[20px] justify-center">
+          {categorisedList?.map((item) => {
+            return <FoodCard data={item} />;
+          })}
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default UserDashboard
+export default UserDashboard;

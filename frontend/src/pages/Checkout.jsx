@@ -22,7 +22,7 @@ function RecenterMap({location}){
 
 function Checkout() {
     const { location, fullAddress } = useSelector((state) => state.map)
-    const { cartItems, totalAmount } = useSelector((state) => state.user)
+    const { cartItems, totalAmount, userData } = useSelector((state) => state.user)
     const dispatch = useDispatch()
     const apiKey = import.meta.env.VITE_GEO_API_KEY
     const [ addressInput , setAddressInput ] = useState("")
@@ -37,12 +37,12 @@ function Checkout() {
 }
 
     function getCurrentLocation(){
-        navigator.geolocation.getCurrentPosition(async(position) => {
-            const latitude = position.coords.latitude
-            const longitude = position.coords.longitude
+
+            const latitude = userData?.user?.location.coordinates[1]
+            const longitude = userData?.user?.location.coordinates[0]
             dispatch(setLocation({lat: latitude, lon: longitude}))
             getAddressByLatLng(latitude, longitude)
-    })}
+    }
 
     async function getLatLngByAddress(){
         const result = await axios.get(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addressInput)}&apiKey=${apiKey}`)
@@ -73,14 +73,53 @@ function Checkout() {
             cartItems
         },{withCredentials: true})
 
-        console.log(result.data)
-        dispatch(addMyOrder(result.data.newOrder))
-        navigate('/order-placed')
+        if(paymentMethod == 'COD'){
+            dispatch(addMyOrder(result.data.newOrder))
+            navigate('/order-placed')
+        }else{
+            const razorpayOrder = result.data.razorpayOrder
+            const orderId = result.data.orderId
+
+            handleRazorpayPayment(razorpayOrder, orderId)
+
+        }
            
        } catch (error) {
            console.log(error)
        }    
     }
+
+    const handleRazorpayPayment = async(razorpayOrder, orderId) => {
+
+        const options = {
+           key: import.meta.env.VITE_RAZORPAY_API_KEY,
+           amount: razorpayOrder.amount,
+           currency: 'INR',
+           name: 'Foodigo',
+           description: 'Payment for food delivery order',
+           order_id: razorpayOrder.id,
+           handler: async function(response){
+            try {
+                const result = await axios.post(`${serverUrl}/api/order/verify-payment`,{
+                    paymentId: response.paymentId,
+                    orderId
+                })
+                dispatch(addMyOrder(result.data.newOrder))
+                navigate('/order-placed')
+                
+                
+            } catch (error) {
+                console.log(error)
+            }
+           }
+           
+        
+        }
+        const rzp = new window.Razorpay(options)
+        rzp.open()
+    }
+        
+    
 
 
     const navigate = useNavigate()

@@ -71,7 +71,7 @@ async function getMyCityRestaurants(req, res){
            return res.status(400).json({message: 'City is required'})
        }
    
-       const restaurants = await restaurantModel.find({city: {$regex: new RegExp(`^new delhi$`, 'i')}}).populate('items')
+       const restaurants = await restaurantModel.find({city: {$regex: new RegExp(`^${city}$`, 'i')}}).populate('items')
    
        return res.status(200).json({message: 'Restaurants fetched successfully', restaurants})
    

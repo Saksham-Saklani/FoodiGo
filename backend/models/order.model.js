@@ -74,6 +74,19 @@ const orderSchema = new mongoose.Schema(
     },
     totalAmount: Number,
     restaurantOrders: [restaurantOrderSchema],
+
+    payment:{
+      type:Boolean,
+      default:false
+    },
+    razorpayOrderId:{
+      type:String,
+      default:""
+    },
+    razorpayPaymentId:{
+      type:String,
+      default:""
+    },
   },
   { timestamps: true },
 );

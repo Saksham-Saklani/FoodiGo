@@ -3,6 +3,14 @@ const orderModel = require("../models/order.model");
 const userModel = require("../models/user.model");
 const DeliveryAssignmentModel = require("../models/deliveryAssignment.model");
 const { sendDeliveryOtpMail } = require('../utils/mail')
+const Razorpay = require('razorpay');
+const dotenv = require('dotenv')
+dotenv.config()
+
+let instance = new Razorpay({
+  key_id: process.env.RAZORPAY_API_KEY,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const placeOrder = async (req, res) => {
   try {
@@ -61,6 +69,29 @@ const placeOrder = async (req, res) => {
         };
       }),
     );
+
+    if(paymentMethod == 'Online'){
+      const razorpayOrder = await instance.orders.create({
+        amount: Math.round(totalAmount * 100),
+        currency: 'INR',
+        receipt: `receipt_${Date.now()}`
+      })
+
+      const newOrder = await orderModel.create({
+      user: req.userId,
+      paymentMethod,
+      deliveryAddress,
+      totalAmount,
+      restaurantOrders,
+      razorpayOrderId: razorpayOrder.id,
+      payment: false
+    });
+
+    return res.status(200).json({
+      razorpayOrder,
+      orderId: newOrder._id
+    })
+    }
 
     const newOrder = await orderModel.create({
       user: req.userId,
@@ -407,6 +438,34 @@ const verifyDeliveryOtp = async(req, res) => {
   }
 }
 
+const verifyPayment = async(req, res) => {
+  try {
+    const {paymentId, orderId} = req.body
+
+    const payment = await instance.payments.fetch(paymentId)
+
+    if(!payment || payment.status!== 'captured'){
+      return res.status(400).json({message: "payment not verified"})
+    }
+
+    const order = await orderModel.findById(orderId)
+
+    if(!order) return res.status(404).json({message:'order not found'})
+
+      order.payment = true
+      order.razorpayPaymentId=paymentId
+      await order.save()
+
+      await order.populate('restaurantOrders.restaurant', 'name')
+      await order.populate('restaurantOrders.orderItems.item', 'name image price')
+
+
+      return res.status(200).json({message: "payment verified successfully", order})
+  } catch (error) {
+    res.status(500).json({message: `verify payment error: ${error}`})
+  }
+}
+
 
 
 module.exports = {
@@ -418,5 +477,6 @@ module.exports = {
   getCurrentOrder,
   getOrderById,
   sendDeliveryOtp,
-  verifyDeliveryOtp
+  verifyDeliveryOtp,
+  verifyPayment
 };

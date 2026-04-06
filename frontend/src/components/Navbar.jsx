@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MapPin, Search, ShoppingCart, LogOut, Box, X, Plus } from 'lucide-react'
 import { useSelector,useDispatch } from 'react-redux'
-import { setUserData } from '../redux/userSlice'
+import { setSearchItems, setUserData } from '../redux/userSlice'
 import axios from 'axios'
 import { serverUrl } from "../App"
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +11,7 @@ function Navbar() {
     const { restaurantData } = useSelector(state => state.owner)
     const [showMenu, setShowMenu] = useState(false)
     const [showSearch, setShowSearch] = useState(false)
+    const [query, setQuery] = useState('')
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
@@ -27,6 +28,26 @@ function Navbar() {
             console.error(error)
         }
     }
+
+    const handleSearchItems = async() => {
+        try {
+            const result = await axios.get(`${serverUrl}/api/item/search-items?query=${query}&city=${currentCity}`,
+                {withCredentials: true}
+            )
+            dispatch(setSearchItems(result.data))
+            console.log(result.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        if(query){
+            handleSearchItems()
+        }else{
+            dispatch(setSearchItems(null))
+        }
+    }, [query])
 
   return (
     <div className='w-screen h-[80px] bg-[#f7fff6] flex items-center justify-between md:justify-center px-20 top-0 fixed z-[9999] gap-[30px] overflow visible'>
@@ -46,7 +67,9 @@ function Navbar() {
                             <Search  size={25} color={'#83e34e'} />
                             <input 
                             className='w-full outline-0 text-gray-700 px-[10px]'
-                            placeholder='Search delicious food...'/>
+                            placeholder='Search delicious food...'
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}/>
                         </div>
                     </div>
             }
@@ -64,7 +87,9 @@ function Navbar() {
                    <Search  size={25} color={'#83e34e'} />
                    <input 
                    className='w-full outline-0 text-gray-700 px-[10px]'
-                   placeholder='Search delicious food...'/>
+                   placeholder='Search delicious food...'
+                   value={query}
+                   onChange={(e) => setQuery(e.target.value)}/>
                </div>
            </div>
                 }

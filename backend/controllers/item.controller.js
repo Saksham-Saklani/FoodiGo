@@ -1,6 +1,7 @@
 const uploadOnCloudinary = require('../utils/cloudinary')
 const restaurantModel = require('../models/restaurant.model')
 const itemModel = require('../models/item.model')
+const { options } = require('../routes/order.routes')
 
 async function addItem(req, res){
     try {
@@ -128,5 +129,56 @@ async function deleteItem(req, res){
     }
 }
 
+async function getItemsByRestaurant(req, res) {
+    try {
+        const {restaurantId} = req.params
 
-module.exports = { addItem, editItem, getItemById, deleteItem }
+        const restaurant = await restaurantModel.findById(restaurantId)
+        .populate("items")
+
+        if(!restaurant) return res.status(400).json({message: "restaurant not found"})
+
+            return res.status(200).json({message: "items fetched successfully", restaurant, items: restaurant.items})
+    } catch (error) {
+        return res.status(500).json({message: "Error fetching items", error})
+    }
+}
+
+async function searchItems(req, res){
+
+    try {
+        const { query, city } = req.query
+
+        if(!query || !city){
+        return res.status(400).json({message: "Query and city are required"})
+    }
+
+    const restaurants = await restaurantModel.find({city: {$regex: new RegExp(`^${city}$`, 'i')}})
+    .populate('items')
+
+    const restaurantIds = restaurants.map(rest => rest._id)
+
+    const items = await itemModel.find({
+        restaurant: {$in: restaurantIds},
+        $or: [
+            {name: {$regex:query, $options: 'i' }},
+            {category: {$regex: query, $options: 'i'}}
+        ]
+    }).populate('restaurant', 'name image')
+
+        return res.status(200).json(items)
+    } catch (error) {
+        return res.status(500).json({message: "Error searching items", error})
+    }
+    
+}
+
+
+module.exports = { 
+    addItem, 
+    editItem, 
+    getItemById, 
+    deleteItem, 
+    getItemsByRestaurant, 
+    searchItems 
+}
