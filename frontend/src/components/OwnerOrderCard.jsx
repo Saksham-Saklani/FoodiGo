@@ -1,11 +1,12 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import { Mail, Phone } from 'lucide-react'
 import { serverUrl } from '../App'
 import axios from 'axios'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setOrderStatus } from '../redux/userSlice'
 
 function OwnerOrderCard({data}) {
+    const {socket} = useSelector((state) => state.user)
     const [availablePartners, setAvailablePartners] = useState([])
     const dispatch = useDispatch()
     const handleUpdateStatus = async(orderId, restaurantId, status) => {
@@ -18,6 +19,8 @@ function OwnerOrderCard({data}) {
             console.log(error)
         }
     }
+
+ 
   return (
     <div className='bg-white rounded-lg shadow p-4 space-y-4'>
         <div>
@@ -28,6 +31,7 @@ function OwnerOrderCard({data}) {
         <div>
             <p className='text-xs text-gray-500'>{data?.deliveryAddress?.text}</p>
         </div>
+        
 
         <div className='flex space-x-4 overflow-x-auto pb-2'>
                     {data.restaurantOrders.orderItems.map((item, index) => (
@@ -70,8 +74,9 @@ function OwnerOrderCard({data}) {
             </div>
         )}
 
-        <div className='text-right text-sm font-bold text-gray-800 mt-2'>
-            <p>Total: ₹{data.restaurantOrders.subtotal}</p>
+        <div className='flex justify-between  mt-2'>
+            <p className='text-sm font-semibold text-gray-800'>{data.paymentMethod == 'Online' ? 'Payment: '+ data.payment : 'Payment Method: '+ data.paymentMethod }</p>
+            <p className='text-sm font-bold text-gray-800'>Total: ₹{data.restaurantOrders.subtotal}</p>
         </div>
     </div>
 

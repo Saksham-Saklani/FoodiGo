@@ -7,13 +7,14 @@ import { MapPin, Box } from "lucide-react";
 import DeliveryTracking from "./DeliveryTracking";
 
 function DeliveryPartnerDashBoard() {
-  const { userData } = useSelector((state) => state.user);
+  const { userData, socket } = useSelector((state) => state.user);
   const { currentAddress } = useSelector((state) => state.user);
 
   const [availableAssignments, setAvailableAssignments] = useState([]);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [otpInput, setOtpInput] = useState(false);
   const [otp, setOtp] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState(null);
 
   const getCurrentOrder = async () => {
     try {
@@ -94,6 +95,51 @@ function DeliveryPartnerDashBoard() {
     getOrders();
     getCurrentOrder();
   }, [userData]);
+
+  useEffect(() => {
+    socket?.on("newAssignment", (data) => {
+      if (data?.sentTo == userData?.user?._id) {
+        setAvailableAssignments((prev) => [...prev, data]);
+      }
+    });
+
+    return () => {
+      socket?.off("newAssignment");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket || userData?.user?.role !== "Delivery Partner") return;
+    let watchId;
+
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          setDeliveryLocation({ lat: latitude, lon: longitude });
+          console.log({latitude, longitude, userId: userData?.user?._id})
+
+          socket.emit("updateLocation", {
+            latitude,
+            longitude,
+            userId: userData?.user?._id,
+          });
+          
+        },
+        (error) => {
+          console.log(error);
+        },
+        {
+          enableHighAccuracy: true,
+        },
+      );
+
+      return () => {
+        if(watchId)navigator.geolocation.clearWatch(watchId);
+      };
+    }
+  }, [socket, userData]);
   return (
     <div className="bg-[#f7fff6] flex flex-col items-center min-h-screen w-screen gap-5 pt-[80px] overflow-y-auto">
       <Navbar />
@@ -172,7 +218,18 @@ function DeliveryPartnerDashBoard() {
               </p>
             </div>
 
-            <DeliveryTracking data={currentOrder} />
+            <DeliveryTracking
+              data={{
+                deliveryPartnerLocation: deliveryLocation || {
+                  lat: userData?.user?.location?.coordinates[1],
+                  lon: userData?.user?.location?.coordinates[0],
+                },
+                customerLocation: {
+                  lat: currentOrder?.deliveryAddress?.latitude,
+                  lon: currentOrder?.deliveryAddress?.longitude,
+                },
+              }}
+            />
 
             {!otpInput ? (
               <button

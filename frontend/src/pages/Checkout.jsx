@@ -69,7 +69,7 @@ function Checkout() {
                latitude: location.lat,
                longitude: location.lon
             },
-            totalAmount,
+            totalAmount: paymentAmount,
             cartItems
         },{withCredentials: true})
 

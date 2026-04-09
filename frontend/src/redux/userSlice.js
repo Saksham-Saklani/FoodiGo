@@ -1,82 +1,124 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
 
-const userSlice =createSlice({
-    name: 'user',
-    initialState:{
-        userData: null,
-        currentCity : null,
-        currentState: null,
-        currentAddress: null,
-        myCityRestaurants: null,
-        cartItems: [],
-        totalAmount: 0,
-        myOrders: [],
-        orderStatus: null,
-        searchItems: null
+const userSlice = createSlice({
+  name: "user",
+  initialState: {
+    userData: null,
+    currentCity: null,
+    currentState: null,
+    currentAddress: null,
+    myCityRestaurants: null,
+    cartItems: [],
+    totalAmount: 0,
+    myOrders: [],
+    orderStatus: null,
+    searchItems: null,
+    socket: null,
+  },
+  reducers: {
+    setUserData: (state, action) => {
+      state.userData = action.payload;
     },
-    reducers: {
-        setUserData: (state, action) => {
-            state.userData = action.payload
-        },
-        setCurrentCity : (state, action) => {
-            state.currentCity = action.payload
-        },
-        setCurrentState: (state, action) => {
-            state.currentState = action.payload
-        },
-        setCurrentAddress: (state, action) => {
-            state.currentAddress = action.payload
-        },
-        setMyCityRestaurants: (state, action) => {
-            state.myCityRestaurants = action.payload
-        },
-        addToCart:(state, action) => {
-            const cartItem = action.payload
-            const existingItem = state.cartItems.find(i => i.id == cartItem.id)
-            if(existingItem){
-                existingItem.quantity += cartItem.quantity
-            }else{
-                state.cartItems.push(cartItem)
-            }
+    setCurrentCity: (state, action) => {
+      state.currentCity = action.payload;
+    },
+    setCurrentState: (state, action) => {
+      state.currentState = action.payload;
+    },
+    setCurrentAddress: (state, action) => {
+      state.currentAddress = action.payload;
+    },
+    setMyCityRestaurants: (state, action) => {
+      state.myCityRestaurants = action.payload;
+    },
+    addToCart: (state, action) => {
+      const cartItem = action.payload;
+      const existingItem = state.cartItems.find((i) => i.id == cartItem.id);
+      if (existingItem) {
+        existingItem.quantity += cartItem.quantity;
+      } else {
+        state.cartItems.push(cartItem);
+      }
 
-            state.totalAmount = state.cartItems.reduce((total, i) => total + i.price * i.quantity, 0)
-        },
-        updateQuantity: (state, action) => {
-            const {id, quantity} = action.payload
-            const item = state.cartItems.find(i => i.id == id)
-            if(item){
-                item.quantity = quantity
-            }
-            state.totalAmount = state.cartItems.reduce((total, i) => total + i.price * i.quantity, 0)
+      state.totalAmount = state.cartItems.reduce(
+        (total, i) => total + i.price * i.quantity,
+        0,
+      );
+    },
+    updateQuantity: (state, action) => {
+      const { id, quantity } = action.payload;
+      const item = state.cartItems.find((i) => i.id == id);
+      if (item) {
+        item.quantity = quantity;
+      }
+      state.totalAmount = state.cartItems.reduce(
+        (total, i) => total + i.price * i.quantity,
+        0,
+      );
+    },
+    removeCartItem: (state, action) => {
+      state.cartItems = state.cartItems.filter((i) => i.id !== action.payload);
+      state.totalAmount = state.cartItems.reduce(
+        (total, i) => total + i.price * i.quantity,
+        0,
+      );
+    },
 
-        },
-        removeCartItem: (state, action) => {
-            state.cartItems = state.cartItems.filter(i => i.id !== action.payload)
-            state.totalAmount = state.cartItems.reduce((total, i) => total + i.price * i.quantity, 0)
-
-        },
-        
-        setMyOrders: (state, action) => {
-            state.myOrders = action.payload
-        },
-        addMyOrder: (state,action) => {
-            state.myOrders = [action.payload, ...state.myOrders]
-        },
-        setOrderStatus: (state, action) => {
-            const {restaurantId, orderId, status} = action.payload
-            const order = state.myOrders.find(o => o._id == orderId )
-            if(order){
-                if(order.restaurantOrders && order.restaurantOrders.restaurant._id == restaurantId){
-                order.restaurantOrders.status = status
-                }
-            }
-        },
-        setSearchItems: (state, action) => {
-            state.searchItems = action.payload
+    setMyOrders: (state, action) => {
+      state.myOrders = action.payload;
+    },
+    addMyOrder: (state, action) => {
+      state.myOrders = [action.payload, ...state.myOrders];
+    },
+    setOrderStatus: (state, action) => {
+      const { restaurantId, orderId, status } = action.payload;
+      const order = state.myOrders.find((o) => o._id == orderId);
+      if (order) {
+        if (
+          order.restaurantOrders &&
+          order.restaurantOrders.restaurant._id == restaurantId
+        ) {
+          order.restaurantOrders.status = status;
         }
-    }
-})
+      }
+    },
+    updateRealTimeOrderStaus: (state, action) => {
+      const { restaurantId, orderId, status } = action.payload;
 
-export const { setUserData, setCurrentCity, setCurrentState, setCurrentAddress, setMyCityRestaurants, addToCart, updateQuantity, removeCartItem, setMyOrders, addMyOrder, setOrderStatus, setSearchItems  } = userSlice.actions
+      const order = state.myOrders.find((o) => o._id == orderId);
+      if (order) {
+        const restaurantOrder = order.restaurantOrders.find(
+          (r) => r.restaurant._id == restaurantId,
+        );
+        if (restaurantOrder) {
+          restaurantOrder.status = status;
+        }
+      }
+    },
+    setSearchItems: (state, action) => {
+      state.searchItems = action.payload;
+    },
+    setSocket: (state, action) => {
+      state.socket = action.payload;
+    },
+  },
+});
 
-export default userSlice.reducer
+export const {
+  setUserData,
+  setCurrentCity,
+  setCurrentState,
+  setCurrentAddress,
+  setMyCityRestaurants,
+  addToCart,
+  updateQuantity,
+  removeCartItem,
+  setMyOrders,
+  addMyOrder,
+  setOrderStatus,
+  setSearchItems,
+  setSocket,
+  updateRealTimeOrderStaus,
+} = userSlice.actions;
+
+export default userSlice.reducer;

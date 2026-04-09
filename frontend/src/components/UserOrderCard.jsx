@@ -13,6 +13,8 @@ function UserOrderCard({data}) {
             year: 'numeric',
         })
     }
+
+ 
   return (
     <div className='bg-white rounded-lg shadow p-4 space-y-4'>
         <div className='flex justify-between items-center border-b pb-2'>
@@ -21,7 +23,7 @@ function UserOrderCard({data}) {
                 <p className='text-sm text-gray-500'>{formatDate(data.createdAt)}</p>
             </div>
             <div>
-                <p className='text-sm text-gray-500'>{data.paymentMethod}</p>
+            <p className='text-sm font-semibold text-gray-800'>{data.paymentMethod == 'Online' ? 'Payment: '+ data.payment : 'Payment Method: '+ data.paymentMethod }</p>
                 <p className='text-blue-500 font-semibold'>{data.restaurantOrders?.[0].status}</p>
             </div>
         </div>

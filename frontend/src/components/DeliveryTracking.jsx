@@ -33,6 +33,8 @@ function DeliveryTracking({ data }) {
     [deliveryPartnerLat, deliveryPartnerLon],
     [customerLat, customerLon],
   ];
+
+
   return (
     <div className="w-full h-[400px] mt-3 shadow-md rounded-xl overflow-hidden ">
       <MapContainer
