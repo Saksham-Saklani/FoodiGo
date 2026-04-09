@@ -20,38 +20,38 @@ const restaurantOrderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "restaurant",
     },
-    owner:{
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
     subtotal: Number,
-    status:{
-        type: String,
-        enum: ["Pending", "Preparing", "Out for Delivery", "Delivered"],
-        default: "Pending"
+    status: {
+      type: String,
+      enum: ["Pending", "Preparing", "Out for Delivery", "Delivered"],
+      default: "Pending",
     },
-    assignment:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'DeliveryAssignment',
-        default:null
+    assignment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DeliveryAssignment",
+      default: null,
     },
-    assignedDeliveryPartner:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+    assignedDeliveryPartner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     orderItems: [orderItemSchema],
-       otp:{
-        type: Number,
-        default: null
+    otp: {
+      type: Number,
+      default: null,
     },
-    otpExpiry:{
-        type: Date,
-        default: null
-    },
-    deliveredAt:{
+    otpExpiry: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
+    deliveredAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -75,17 +75,17 @@ const orderSchema = new mongoose.Schema(
     totalAmount: Number,
     restaurantOrders: [restaurantOrderSchema],
 
-    payment:{
-      type:Boolean,
-      default:false
+    payment: {
+      type: Boolean,
+      default: false,
     },
-    razorpayOrderId:{
-      type:String,
-      default:""
+    razorpayOrderId: {
+      type: String,
+      default: "",
     },
-    razorpayPaymentId:{
-      type:String,
-      default:""
+    razorpayPaymentId: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true },

@@ -5,6 +5,8 @@ import { serverUrl } from "../App";
 import axios from "axios";
 import { MapPin, Box } from "lucide-react";
 import DeliveryTracking from "./DeliveryTracking";
+import { CartesianGrid, ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from 'recharts'
+import { ClipLoader } from "react-spinners";
 
 function DeliveryPartnerDashBoard() {
   const { userData, socket } = useSelector((state) => state.user);
@@ -15,6 +17,14 @@ function DeliveryPartnerDashBoard() {
   const [otpInput, setOtpInput] = useState(false);
   const [otp, setOtp] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState(null);
+  const [todayDeliveries, setTodayDeliveries] = useState([]);
+  const [message, setMessage] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const earningPerOrder = 50
+  const totalEarnings = todayDeliveries.reduce((sum, d) => {
+    return sum + d.count * earningPerOrder
+  }, 0)
 
   const getCurrentOrder = async () => {
     try {
@@ -59,6 +69,7 @@ function DeliveryPartnerDashBoard() {
 
   const handleSendOtp = async () => {
     setOtpInput(true);
+    setLoading(true)
     try {
       const result = await axios.post(
         `${serverUrl}/api/order/send-delivery-otp`,
@@ -69,12 +80,15 @@ function DeliveryPartnerDashBoard() {
         { withCredentials: true },
       );
       console.log(result.data);
+      setLoading(false)
     } catch (error) {
       console.log(error);
+      setLoading(false)
     }
   };
   const handleVerifyOtp = async () => {
     setOtpInput(true);
+    setMessage("")
     try {
       const result = await axios.post(
         `${serverUrl}/api/order/verify-delivery-otp`,
@@ -86,14 +100,27 @@ function DeliveryPartnerDashBoard() {
         { withCredentials: true },
       );
       console.log(result.data);
+      setMessage(result.data.message)
+      location.reload()
     } catch (error) {
       console.log(error);
     }
   };
 
+  const handleTodayDeliveries = async() => {
+    try {
+      const result = await axios.get(`${serverUrl}/api/order/get-today-deliveries`,{withCredentials: true})
+      console.log(result.data)
+      setTodayDeliveries(result.data.formattedStats)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
     getOrders();
     getCurrentOrder();
+    handleTodayDeliveries()
   }, [userData]);
 
   useEffect(() => {
@@ -151,6 +178,24 @@ function DeliveryPartnerDashBoard() {
           <div className="flex items-center gap-2 text-md text-[#83e34e] ">
             <MapPin />
             Current Location: {currentAddress}
+          </div>
+        </div>
+
+        <div className="bg-white w-[90%] p-5 shadow-md border border-green-100 rounded-2xl">
+          <h1 className="font-bold text-[#83e34e] text-lg">Today Deliveries</h1>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={todayDeliveries}>
+              <CartesianGrid strokeDasharray="3 3"/>
+              <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`}/>
+              <YAxis allowDecimals={false}/>
+              <Tooltip formatter={(value) => [value,"orders"]} labelFormatter={(label) => `${label}:00`}/>
+              <Bar dataKey="count" fill="#83e34e"/>
+            </BarChart>     
+          </ResponsiveContainer>
+
+          <div className="max-w-sm mx-auto mt-6 p6 rounded-2xl bg-white shadow-lg text-center ">
+            <h1 className="text-xl font-semibold text-gray-800 mb-2">Today's Earnings:</h1>
+            <span className="text-3xl font-bold text-emerald-700">₹{totalEarnings}</span>
           </div>
         </div>
 
@@ -235,8 +280,9 @@ function DeliveryPartnerDashBoard() {
               <button
                 onClick={handleSendOtp}
                 className="w-full bg-[#83e34e] shadow-md text-white font-semibold rounded-xl px-4 py-2 mt-4 hover:bg-[#62c23a] active:scale-95 transition-all duration-200 cursor-pointer"
+                disabled={loading}
               >
-                Mark as Delivered
+                {loading ? <ClipLoader color="white" size={20}/> : "Mark as Delivered"}
               </button>
             ) : (
               <div className="mt-4 p-4 border bg-gray-50 rounded-xl">
@@ -251,6 +297,7 @@ function DeliveryPartnerDashBoard() {
                   className="w-full border px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-xl mt-2"
                   placeholder="Enter OTP"
                 />
+                {message && <p className="text-emerald-700 text-lg font-semibold">{message}</p>}
                 <button
                   onClick={handleVerifyOtp}
                   className="w-full py-2 px-2 rounded-xl shadow-md bg-[#83e34e] text-white font-semibold hover:bg-[#62c23a] active:scale-95 transition-all duration-200 cursor-pointer"

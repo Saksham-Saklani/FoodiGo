@@ -114,7 +114,7 @@ function Navbar() {
         <button className=' flex bg-[#83e343]/10 text-[#83e343]  items-center gap-2 rounded-lg text-sm relative font-medium py-1 px-3 cursor-pointer' onClick={() => navigate('/my-orders')}>
             <Box size={20}/>
             <span className='hidden md:block whitespace-nowrap'>My Orders</span>
-            <span className='absolute -right-1 -top-2 bg-[#83e343] text-white rounded-full w-4 h-4 flex items-center justify-center text-xs'>0</span>
+
         </button>
         </>
         :

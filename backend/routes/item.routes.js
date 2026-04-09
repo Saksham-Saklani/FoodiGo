@@ -2,6 +2,7 @@ const express = require('express')
 const upload = require('../middlewares/multer')
 const auth = require('../middlewares/auth')
 const { addItem, editItem, getItemById, deleteItem, getItemsByRestaurant, searchItems } = require('../controllers/item.controller')
+const { itemRating } = require('../controllers/user.controller')
 
 const itemRouter = express.Router()
 
@@ -11,6 +12,7 @@ itemRouter.get('/get/:itemId', auth, getItemById)
 itemRouter.delete('/delete/:itemId', auth, deleteItem)
 itemRouter.get('/get-restaurant-items/:restaurantId', auth, getItemsByRestaurant)
 itemRouter.get('/search-items', auth, searchItems)
+itemRouter.post('/item-rating', auth, itemRating)
 
 
 module.exports = itemRouter

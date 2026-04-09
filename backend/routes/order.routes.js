@@ -1,5 +1,5 @@
 const express = require('express')
-const { placeOrder, getMyOrders, updateOrderStatus, getDeliveryPartnerAssignments, acceptDeliveryAssignment, getCurrentOrder, getOrderById , sendDeliveryOtp, verifyDeliveryOtp, verifyPayment} = require('../controllers/order.controller')
+const { placeOrder, getMyOrders, updateOrderStatus, getDeliveryPartnerAssignments, acceptDeliveryAssignment, getCurrentOrder, getOrderById , sendDeliveryOtp, verifyDeliveryOtp, verifyPayment, getTodayDeliveries} = require('../controllers/order.controller')
 const auth = require('../middlewares/auth')
 
 
@@ -16,6 +16,7 @@ orderRouter.get('/get-order-by-id/:orderId', auth, getOrderById)
 orderRouter.get('/accept-order/:assignmentId', auth, acceptDeliveryAssignment)
 orderRouter.post('/update-status/:orderId/:restaurantId', auth, updateOrderStatus)
 orderRouter.post('/verify-payment', auth, verifyPayment)
+orderRouter.get('/get-today-deliveries', auth, getTodayDeliveries)
 
 
 

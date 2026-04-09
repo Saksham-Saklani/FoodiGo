@@ -599,6 +599,55 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+const getTodayDeliveries = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const deliveryPartnerId = req.userId;
+
+    const orders = await orderModel.find({
+      "restaurantOrders.status": "Delivered",
+      "restaurantOrders.assignedDeliveryPartner": deliveryPartnerId,
+      "restaurantOrders.deliveredAt": {
+        $gte: startOfDay,
+      },
+    });
+
+    let todayDeliveries = [];
+
+    orders.forEach((order) => {
+      order.restaurantOrders.forEach((restaurantOrder) => {
+        if (
+          restaurantOrder.assignedDeliveryPartner == deliveryPartnerId &&
+          restaurantOrder.status == "Delivered" &&
+          restaurantOrder.deliveredAt >= startOfDay
+        ) {
+          todayDeliveries.push(restaurantOrder);
+        }
+      });
+    });
+
+    let stats = {};
+
+    todayDeliveries.forEach((delivery) => {
+      const hour = delivery.deliveredAt.getHours();
+      stats[hour] = (stats[hour] || 0) + 1;
+    });
+
+    let formattedStats = Object.keys(stats).map((hour) => ({
+      hour: parseInt(hour),
+      count: stats[hour],
+    }));
+
+    formattedStats.sort((a, b) => a.hour - b.hour);
+
+    return res.status(200).json({ formattedStats });
+  } catch (error) {
+    res.status(500).json({ message: `get today deliveries error: ${error}` });
+  }
+};
+
 module.exports = {
   placeOrder,
   getMyOrders,
@@ -610,4 +659,5 @@ module.exports = {
   sendDeliveryOtp,
   verifyDeliveryOtp,
   verifyPayment,
+  getTodayDeliveries,
 };

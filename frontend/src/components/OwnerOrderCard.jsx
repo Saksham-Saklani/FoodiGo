@@ -9,6 +9,7 @@ function OwnerOrderCard({data}) {
     const {socket} = useSelector((state) => state.user)
     const [availablePartners, setAvailablePartners] = useState([])
     const dispatch = useDispatch()
+
     const handleUpdateStatus = async(orderId, restaurantId, status) => {
         try {
             const result = await axios.post(`${serverUrl}/api/order/update-status/${orderId}/${restaurantId}`, {status}, {withCredentials: true})
@@ -19,6 +20,9 @@ function OwnerOrderCard({data}) {
             console.log(error)
         }
     }
+
+   
+        
 
  
   return (
@@ -39,6 +43,8 @@ function OwnerOrderCard({data}) {
                             <img src={item.item.image} alt={item.item.name} className='w-full h-24 oject-cover rounded' />
                             <p className='font-semibold text-sm mt-1'>{item.item.name}</p>
                             <p className='text-xs text-gray-500'>₹{item.price} x {item.quantity}</p>
+
+                            
                         </div>
                     ))}
         </div>
