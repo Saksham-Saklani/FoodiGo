@@ -50,7 +50,7 @@ function Navbar() {
     }, [query])
 
   return (
-    <div className='w-screen h-[80px] bg-[#f7fff6] flex items-center justify-between md:justify-center px-20 top-0 fixed z-[9999] gap-[30px] overflow visible'>
+    <div className='w-screen h-[80px] bg-[#f7fff6] flex items-center justify-between md:justify-center px-20 top-0 fixed z-9999 gap-[30px] overflow visible'>
             <h1 className='text-3xl font-bold text-[#83e34e] mb-2'>
                 FoodiGo
             </h1>
@@ -148,7 +148,7 @@ function Navbar() {
                  {userData?.user?.fullname.slice(0,1)}
             </div>
                 {showMenu && 
-                    <div className={`fixed top-[80px] ${userData?.user?.role === 'Customer' ? 'md:right-[5%] right-[10px] lg:right-[10%]': 'md:right-[20%] right-[30px] lg:right-[30%]'} shadow-2xl rounded-xl bg-white  w-auto min-w-[180px] p-[20px] flex flex-col gap-[10px] z-[9999]`}>
+                    <div className={`fixed top-[80px] ${userData?.user?.role === 'Customer' ? 'md:right-[5%] right-[10px] lg:right-[10%]': 'md:right-[20%] right-[30px] lg:right-[30%]'} shadow-2xl rounded-xl bg-white  w-auto min-w-[180px] p-[20px] flex flex-col gap-[10px] z-9999`}>
                     <div className='font-semibold text-[17px] '>{userData?.user?.fullname}</div>
                    {userData?.user?.role === 'Customer' &&
                     <div className='text-[#83e343] md:hidden text-[17px] flex items-center gap-2 font-semibold cursor-pointer' onClick={() => navigate('/my-orders')}>
