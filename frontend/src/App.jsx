@@ -45,11 +45,11 @@ function App() {
       if (userData) {
         socketInstance.emit("identity", { userId: userData.user._id });
       }
-    })
-    
+    });
+
     return () => {
-      socketInstance.disconnect()
-    }
+      socketInstance.disconnect();
+    };
   }, [userData?.user?._id]);
 
   return (
@@ -57,24 +57,35 @@ function App() {
       <Routes>
         <Route path="/register" element={!userData ? <Register /> : <Home />} />
         <Route path="/login" element={!userData ? <Login /> : <Home />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route
-          path="/user-dashboard"
-          element={!userData ? <Login /> : <UserDashboard />}
-        />
+        <Route path="/forgot-password" element={ <ForgotPassword />} />
         <Route path="/" element={!userData ? <Login /> : <Home />} />
         <Route
           path="/create-edit-restaurant"
-          element={<CreateEditRestaurant />}
+          element={userData?.user?.role == "Owner" ? <CreateEditRestaurant /> : <Login />}
         />
-        <Route path="/add-item" element={<AddItem />} />
-        <Route path="/edit-item/:itemId" element={<EditItem />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-placed" element={<OrderPlaced />} />
-        <Route path="/my-orders" element={<MyOrders />} />
-        <Route path="/track-order/:orderId" element={<TrackOrder />} />
-        <Route path="/restaurant/:restaurantId" element={<Restaurant />} />
+        <Route path="/add-item" element={userData?.user?.role == "Owner" ? <AddItem /> : <Login />} />
+        <Route
+          path="/edit-item/:itemId"
+          element={userData?.user?.role == "Owner" ? <EditItem /> : <Login />}
+        />
+        <Route path="/cart" element={userData ? <Cart /> : <Login />} />
+        <Route path="/checkout" element={userData?.user?.role == "Customer" ? <Checkout /> : <Login />} />
+        <Route
+          path="/order-placed"
+          element={userData ? <OrderPlaced /> : <Login />}
+        />
+        <Route
+          path="/my-orders"
+          element={userData ? <MyOrders /> : <Login />}
+        />
+        <Route
+          path="/track-order/:orderId"
+          element={userData ? <TrackOrder /> : <Login />}
+        />
+        <Route
+          path="/restaurant/:restaurantId"
+          element={userData ? <Restaurant /> : <Login />}
+        />
       </Routes>
     </>
   );
