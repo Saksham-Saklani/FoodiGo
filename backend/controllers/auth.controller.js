@@ -32,7 +32,7 @@ async function registerUser(req, res) {
     });
 
     const token = await generateToken(user._id);
-    res.cookie('token', token)
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'none' })
 
 
     res.status(201).json({message: "Registration successful", user})
@@ -59,7 +59,7 @@ async function loginUser(req, res){
         }
 
         const token = await generateToken(user._id)
-        res.cookie('token', token)
+        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'none' })
 
         res.status(200).json({message: "Login successful", user})
 
@@ -70,7 +70,7 @@ async function loginUser(req, res){
 
 async function logoutUser(req,res){
     try {
-        res.clearCookie('token')
+        res.clearCookie('token', { httpOnly: true, secure: true, sameSite: 'none' })
         res.status(200).json({message: "Logout successful"})
     } catch (error) {
         res.status(500).json(`Logout error: ${error}`)
@@ -180,7 +180,7 @@ async function googleSignIn(req, res){
         }
 
         const token = await generateToken(user._id)
-        res.cookie('token', token)
+        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'none' })
 
         res.status(200).json({message: "Google Sign In successful", user})
 
