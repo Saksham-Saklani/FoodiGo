@@ -3,7 +3,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import { useCurrentUser } from "./hooks/currentUser";
-import Home from "./pages/home";
+import Home from "./pages/Home";
 import { useSelector, useDispatch } from "react-redux";
 import { useCurrentCity } from "./hooks/city";
 import UserDashboard from "./components/UserDashboard";
