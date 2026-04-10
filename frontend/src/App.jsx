@@ -24,7 +24,7 @@ import Restaurant from "./pages/Restaurant";
 import { io } from "socket.io-client";
 import { useEffect } from "react";
 import { setSocket } from "./redux/userSlice";
-export const serverUrl = "http://localhost:3000";
+export const serverUrl = "https://foodigo-ng8z.onrender.com";
 
 function App() {
   useCurrentUser();
